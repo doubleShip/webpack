@@ -18,6 +18,13 @@ module.exports = {
         //        collapseWhitespace:false    //删除空白符与换行符
         //   }
         //}),
+        //提供全局的变量，在模块中使用无需用require引入
+        //new webpack.ProvidePlugin({
+        //    jQuery: "jquery",
+        //    $: "jquery",
+        //    // nie: "nie"
+        //}),
+        new webpack.HotModuleReplacementPlugin(),
         // 单独打包css文件
         new ExtractTextPlugin("css/page/[name].css"),
         // 对应打包公用文件
@@ -35,7 +42,7 @@ module.exports = {
     //入口文件输出配置
     output: {
         path: './assets/',
-        publicPath: '',
+        publicPath: '/',//开发与生产环境配置不同
         filename: 'js/page/[name].min.js' // name是基于上边entry中定义的key
     },
     module: {
@@ -74,12 +81,12 @@ module.exports = {
     //其它解决方案配置
     resolve: {
         //查找module的话从这里开始查找
-        root: [process.cwd() + '/src', process.cwd() + '/node_modules'], //绝对路径
+        //root: [process.cwd() + '/src', process.cwd() + '/node_modules'], //绝对路径
         //自动扩展文件后缀名，意味着我们require模块可以省略不写后缀名
         extensions: ['', '.js', '.json', '.scss', '.es6', '.css'],
         //模块别名定义，方便后续直接引用别名，无须多写长长的地址
         alias: {
-            jQuery: path.join(__dirname,'src/bower_components/jquery/dist/jquery.min.js'),
+            jquery: path.join(__dirname,'src/bower_components/jquery/dist/jquery.min.js'),
             zepto: path.join(__dirname,'src/bower_components/zepto/zepto.min.js')
         //    AppStore : 'js/stores/AppStores.js', //后续直接 require('AppStore') 即可
         //    ActionType : 'js/actions/ActionType.js',
@@ -87,5 +94,18 @@ module.exports = {
         //avalon: path.join(__dirname, 'dev/avalon/avalon.shim'), //在正常情况下我们以CommonJS风格引用avalon,以require('avalon')
         //'../avalon': path.join(__dirname, 'dev/avalon/avalon.js')//由于oniui都以是../avalon来引用avalon的，需要在这里进行别名
         }
+    },
+    postcss: [
+        require('autoprefixer')
+    ],
+
+    //////开发环境专有配置
+    devtool: 'source-map',
+    devServer: {
+        color:true,
+        historyApiFallback:true,
+        inline:true,
+        hot:true,
+        contentBase:'./assets'
     }
 };

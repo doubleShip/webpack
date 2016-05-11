@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --progress --colors --content-base public"
+    "build": "webpack --config webpack.config.prod.js",
+    "dev": "webpack-dev-server"
   },
   "keywords": [
     "webpack"
