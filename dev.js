@@ -20,7 +20,7 @@ var serverConfig = {
 
 var webpackConfig = makeConfig(serverConfig);
 
-console.log(webpackConfig);
+//console.log(webpackConfig);
 
 new WebpackDevServer(webpack(webpackConfig), {
 	historyApiFallback: true,

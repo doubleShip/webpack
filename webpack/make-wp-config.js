@@ -3,6 +3,8 @@ var webpack = require('webpack');
 var merge = require('webpack-merge');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var babelMerge = require('./babel-merge');
+var ExtractTextPlugin = require("extract-text-webpack-plugin"); //单独打包css
+var HtmlWebpackPlugin = require("html-webpack-plugin");//html模板生成插件
 
 //输出HTML和CSS等等文件到路径的插件
 var CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -17,6 +19,7 @@ module.exports = function(options) {
         host = options.host || "localhost",
         port = options.port,
         vendor = options.vendor || [],
+        htmlTemplet = options.htmlTemplet || {}, //html模板配置
         baseUrl = 'http://' + host + ':' + port;
 
     if (mode === 'development') mode = 'dev';
@@ -50,7 +53,7 @@ module.exports = function(options) {
             //配置别名，在项目中可缩减引用路径
             alias: {
                 //'react': pathToReact
-                //jquery: path.join(__dirname, "src/bower_components/jquery/dist/jquery.min.js")
+                //moment: "moment/min/moment-with-locales.min.js"
             }
         },
         module: {
@@ -161,6 +164,7 @@ module.exports = function(options) {
     ////////////////////////////////////////////////////////////////////////////////
 
     if (mode === 'prod') {
+        process.env.NODE_ENV = 'production';
         config = merge.smart(config, {
             entry: {
                 "js/app": path.join(dir, 'src/js/app.jsx'),
@@ -173,8 +177,26 @@ module.exports = function(options) {
                         loader: 'babel',
                         exclude: /node_modules/,
                         query: babelMerge(babelQueryBase)
+                    },
+                    {//单独打包css文件
+                        test: /\.scss$/,
+                        loader:  ExtractTextPlugin.extract('style', 'css!autoprefixer!sass')
                     }
-                ]
+                ],
+                //noParse: ["react"]
+            },
+            resolve: {
+                alias: {//重定向
+                    //react: "react/dist/react.min.js",
+                    //moment: "moment/min/moment-with-locales.min.js"
+                }
+            },
+            //声明一个外部依赖,该文件不会打包进去,但是要在html页面引入
+            externals: {
+                //'react': 'React'
+            },
+            autoprefixer: { //浏览器兼容前缀
+                browsers: ['last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4']
             },
             plugins: [
                 //js文件的压缩
@@ -182,12 +204,21 @@ module.exports = function(options) {
                     compressor: {
                         warnings: false
                     }
+                    //except: ['$super', '$', 'exports', 'require']    //排除关键字
                 }),
                 //将公共代码抽离出来合并为一个文件
                 new webpack.optimize.CommonsChunkPlugin({
                     name:"js/vendor",
                     filename:"js/vendor.bundle.js",
-                    minChunks:Infinity
+                    minChunks:3 //// 提取至少3个模块共有的部分
+                }),
+                //单独打包css
+                new ExtractTextPlugin("css/styles.css"),
+                //HtmlWebpackPlugin，模板生成相关的配置，每个对于一个页面的配置，有几个写几个
+                new HtmlWebpackPlugin(htmlTemplet),
+                //减小打包文件大小
+                new webpack.DefinePlugin({
+                    'process.env.NODE_ENV': '"production"'
                 })
             ]
         });
